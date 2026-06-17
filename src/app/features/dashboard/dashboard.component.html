@@ -1,6 +1,12 @@
 <div class="min-h-screen bg-[#05070A] text-white">
   <aside class="fixed left-0 top-0 h-screen w-64 border-r border-[#1F2937] bg-[#070A0F] p-6">
-    <img src="assets/brand/simon-logo-horizontal.png" alt="Simón" class="mb-10 h-12 object-contain" />
+    <div class="mb-10 rounded-2xl bg-white/95 p-3 shadow-lg">
+      <img
+        src="assets/brand/simon-logo-horizontal.png"
+        alt="Simón"
+        class="h-12 w-full object-contain"
+      />
+    </div>
 
     <nav class="space-y-3">
       <button class="nav-item active">Dashboard</button>
@@ -27,25 +33,25 @@
     <section class="grid grid-cols-1 gap-5 md:grid-cols-4">
       <article class="metric-card">
         <p>Total Vehículos</p>
-        <h2>3</h2>
+        <h2>{{ totalVehicles }}</h2>
         <span>En total monitoreados</span>
       </article>
 
       <article class="metric-card">
         <p>En movimiento</p>
-        <h2 class="text-[#10E6C3]">1</h2>
+        <h2 class="text-[#10E6C3]">{{ movingVehicles }}</h2>
         <span>Actualizados en tiempo real</span>
       </article>
 
       <article class="metric-card">
         <p>Detenidos</p>
-        <h2 class="text-yellow-400">1</h2>
+        <h2 class="text-yellow-400">{{ stoppedVehicles }}</h2>
         <span>Sin cambio de posición</span>
       </article>
 
       <article class="metric-card">
         <p>Sin señal</p>
-        <h2 class="text-red-400">1</h2>
+        <h2 class="text-red-400">{{ noSignalVehicles }}</h2>
         <span>Más de 2 minutos</span>
       </article>
     </section>
@@ -66,32 +72,22 @@
         <h2 class="mb-4 text-lg font-semibold">Vehículos en tiempo real</h2>
 
         <div class="space-y-4">
-          <div class="vehicle-row">
-            <span class="dot bg-[#10E6C3]"></span>
-            <div>
-              <strong>VH-001</strong>
-              <p class="text-[#10E6C3]">EN_MOVIMIENTO</p>
-            </div>
-            <span class="ml-auto text-sm text-gray-400">Hace 5 seg</span>
-          </div>
+          @for (vehicle of vehicles; track vehicle.vehicle_id) {
+            <div class="vehicle-row">
+              <span class="dot" [ngClass]="getDotClass(vehicle.status)"></span>
 
-          <div class="vehicle-row">
-            <span class="dot bg-yellow-400"></span>
-            <div>
-              <strong>VH-002</strong>
-              <p class="text-yellow-400">DETENIDO</p>
-            </div>
-            <span class="ml-auto text-sm text-gray-400">Hace 47 seg</span>
-          </div>
+              <div>
+                <strong>{{ vehicle.vehicle_id }}</strong>
+                <p [ngClass]="getStatusTextClass(vehicle.status)">
+                  {{ vehicle.status }}
+                </p>
+              </div>
 
-          <div class="vehicle-row">
-            <span class="dot bg-red-400"></span>
-            <div>
-              <strong>VH-003</strong>
-              <p class="text-red-400">SIN_SENAL</p>
+              <span class="ml-auto text-sm text-gray-400">
+                {{ vehicle.last_seen | date:'shortTime' }}
+              </span>
             </div>
-            <span class="ml-auto text-sm text-gray-400">Hace 2 min</span>
-          </div>
+          }
         </div>
       </div>
     </section>
@@ -110,37 +106,38 @@
               <th class="p-4">Acciones</th>
             </tr>
           </thead>
+
           <tbody>
-            <tr class="table-row">
-              <td class="p-4">VH-001</td>
-              <td class="p-4"><span class="badge badge-moving">EN_MOVIMIENTO</span></td>
-              <td class="p-4">4.7110, -74.0721</td>
-              <td class="p-4">17/06/2026 11:37:05</td>
-              <td class="p-4"><button class="action-btn">Ver</button></td>
-            </tr>
+            @for (vehicle of vehicles; track vehicle.vehicle_id) {
+              <tr class="table-row">
+                <td class="p-4">{{ vehicle.vehicle_id }}</td>
 
-            <tr class="table-row">
-              <td class="p-4">VH-002</td>
-              <td class="p-4"><span class="badge badge-stopped">DETENIDO</span></td>
-              <td class="p-4">4.7005, -74.0408</td>
-              <td class="p-4">17/06/2026 11:36:23</td>
-              <td class="p-4"><button class="action-btn">Ver</button></td>
-            </tr>
+                <td class="p-4">
+                  <span class="badge" [ngClass]="getStatusClass(vehicle.status)">
+                    {{ vehicle.status }}
+                  </span>
+                </td>
 
-            <tr class="table-row">
-              <td class="p-4">VH-003</td>
-              <td class="p-4"><span class="badge badge-offline">SIN_SENAL</span></td>
-              <td class="p-4">4.6501, -74.0901</td>
-              <td class="p-4">17/06/2026 11:34:35</td>
-              <td class="p-4"><button class="action-btn">Ver</button></td>
-            </tr>
+                <td class="p-4">
+                  {{ vehicle.last_lat }}, {{ vehicle.last_lng }}
+                </td>
+
+                <td class="p-4">
+                  {{ vehicle.last_seen | date:'dd/MM/yyyy HH:mm:ss' }}
+                </td>
+
+                <td class="p-4">
+                  <button class="action-btn">Ver</button>
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>
     </section>
 
     <footer class="mt-6 text-sm text-gray-400">
-      Última actualización: 17/06/2026 11:37:05 · Actualizando cada 5 segundos
+      Última actualización: {{ lastUpdate | date:'dd/MM/yyyy HH:mm:ss' }} · Actualizando cada 5 segundos
     </footer>
   </main>
 </div>
