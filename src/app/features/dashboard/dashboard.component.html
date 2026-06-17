@@ -58,8 +58,8 @@
       </article>
     </section>
 
-    <section class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[3fr_1fr]">
-      <div class="panel h-[600px]">
+    <section class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[3.2fr_1fr]">
+      <div class="panel h-[560px]">
         <div class="mb-4 flex items-center justify-between">
           <div>
             <h2 class="text-lg font-semibold">Mapa de vehículos</h2>
@@ -68,48 +68,67 @@
             </p>
           </div>
 
-          <span class="rounded-full border border-[#1F2937] px-3 py-1 text-xs text-gray-400">
+          <div class="hidden gap-3 text-xs text-gray-400 2xl:flex">
+            <span>🟢 Movimiento</span>
+            <span>🟡 Detenido</span>
+            <span>🔴 Sin señal</span>
+          </div>
+
+          <span class="rounded-full border border-[#1F2937] px-3 py-1 text-xs text-gray-400 2xl:hidden">
             Leaflet / Bogotá
           </span>
         </div>
 
         <div
           id="fleet-map"
-          class="h-[515px] overflow-hidden rounded-2xl border border-[#1F2937] bg-[#0B1220] shadow-inner"
+          class="h-[475px] overflow-hidden rounded-2xl border border-[#1F2937] bg-[#0B1220] shadow-inner"
         ></div>
       </div>
 
-      <div class="panel h-[600px]">
+      <div class="panel h-[560px]">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-lg font-semibold">Vehículos en tiempo real</h2>
-          <span class="text-xs text-gray-500">{{ totalVehicles }} activos</span>
+          <div>
+            <h2 class="text-lg font-semibold">Vehículos</h2>
+            <p class="text-xs text-gray-500">Monitoreo activo</p>
+          </div>
+
+          <span class="rounded-full border border-[#1F2937] px-3 py-1 text-xs text-gray-400">
+            {{ totalVehicles }}
+          </span>
         </div>
 
-        <div class="space-y-4">
-          @for (vehicle of vehicles; track vehicle.vehicle_id) {
-            <button
-              type="button"
-              class="vehicle-row w-full text-left transition hover:bg-white/5"
-              (click)="selectVehicle(vehicle)"
-            >
-              <span class="dot" [ngClass]="getDotClass(vehicle.status)"></span>
+       <div class="max-h-[475px] space-y-3 overflow-y-auto pr-2">
+  @for (vehicle of vehicles; track vehicle.vehicle_id) {
+    <button
+      type="button"
+      class="vehicle-row w-full border border-transparent text-left transition hover:bg-white/5"
+      [class.border-[#10E6C3]]="
+        selectedVehicle?.vehicle_id === vehicle.vehicle_id
+      "
+      [class.bg-[#10E6C3]/10]="
+        selectedVehicle?.vehicle_id === vehicle.vehicle_id
+      "
+      (click)="selectVehicle(vehicle)"
+    >
+      <span
+        class="dot"
+        [ngClass]="getDotClass(vehicle.status)"
+      ></span>
 
-              <div>
-                <strong>{{ vehicle.vehicle_id }}</strong>
-                <p [ngClass]="getStatusTextClass(vehicle.status)">
-                  {{ vehicle.status }}
-                </p>
-                <p class="mt-1 text-xs text-gray-500">
-                  {{ vehicle.last_lat }}, {{ vehicle.last_lng }}
-                </p>
-              </div>
+      <div>
+        <strong>{{ vehicle.vehicle_id }}</strong>
 
-              <span class="ml-auto text-sm text-gray-400">
-                {{ vehicle.last_seen | date:'shortTime' }}
-              </span>
-            </button>
-          }
-        </div>
+        <p [ngClass]="getStatusTextClass(vehicle.status)">
+          {{ formatStatus(vehicle.status) }}
+        </p>
+      </div>
+
+      <span class="ml-auto whitespace-nowrap text-xs text-gray-400">
+        {{ getRelativeTime(vehicle.last_seen) }}
+      </span>
+    </button>
+  }
+</div>
       </div>
     </section>
 
@@ -148,7 +167,7 @@
 
                 <td class="p-4">
                   <span class="badge" [ngClass]="getStatusClass(vehicle.status)">
-                    {{ vehicle.status }}
+                    {{ formatStatus(vehicle.status) }}
                   </span>
                 </td>
 
@@ -157,13 +176,17 @@
                 </td>
 
                 <td class="p-4 text-gray-300">
-                  {{ vehicle.last_seen | date:'dd/MM/yyyy HH:mm:ss' }}
+                  {{ getRelativeTime(vehicle.last_seen) }}
                 </td>
 
                 <td class="p-4">
-                  <button class="action-btn" (click)="selectVehicle(vehicle)">
-                    Ver
-                  </button>
+              <button
+  class="action-btn flex items-center gap-2"
+  (click)="selectVehicle(vehicle)"
+>
+  👁
+  <span>Ver detalle</span>
+</button>
                 </td>
               </tr>
             }
@@ -196,7 +219,7 @@
           <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-4">
             <p class="text-sm text-gray-400">Estado actual</p>
             <strong [ngClass]="getStatusTextClass(selectedVehicle.status)">
-              {{ selectedVehicle.status }}
+              {{ formatStatus(selectedVehicle.status) }}
             </strong>
           </div>
 
@@ -212,9 +235,7 @@
 
           <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-4">
             <p class="text-sm text-gray-400">Última transmisión</p>
-            <strong>
-              {{ selectedVehicle.last_seen | date:'dd/MM/yyyy HH:mm:ss' }}
-            </strong>
+            <strong>{{ getRelativeTime(selectedVehicle.last_seen) }}</strong>
           </div>
         </div>
       </section>

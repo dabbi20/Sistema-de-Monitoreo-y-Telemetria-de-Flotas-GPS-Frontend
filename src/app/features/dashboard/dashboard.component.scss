@@ -101,3 +101,25 @@
   padding: 6px 12px;
   color: #10e6c3;
 }
+:host ::ng-deep .leaflet-popup-content-wrapper {
+  border-radius: 16px;
+  background: #0b1220;
+  color: white;
+  border: 1px solid #1f2937;
+}
+
+:host ::ng-deep .leaflet-popup-tip {
+  background: #0b1220;
+}
+
+:host ::ng-deep .map-popup h3 {
+  margin: 0 0 8px;
+  color: #10e6c3;
+  font-size: 15px;
+}
+
+:host ::ng-deep .map-popup p {
+  margin: 4px 0;
+  color: #d1d5db;
+  font-size: 12px;
+}
