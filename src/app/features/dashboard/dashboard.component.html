@@ -127,7 +127,9 @@
                 </td>
 
                 <td class="p-4">
-                  <button class="action-btn">Ver</button>
+                  <button class="action-btn" (click)="selectVehicle(vehicle)">
+                    Ver
+                  </button>
                 </td>
               </tr>
             }
@@ -135,6 +137,49 @@
         </table>
       </div>
     </section>
+
+    @if (selectedVehicle) {
+      <section class="panel mt-6">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-lg font-semibold">
+            Detalle del vehículo {{ selectedVehicle.vehicle_id }}
+          </h2>
+
+          <button
+            class="rounded-lg border border-[#1F2937] px-3 py-1 text-sm text-gray-400 hover:text-white"
+            (click)="closeSelectedVehicle()"
+          >
+            Cerrar
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-4">
+            <p class="text-sm text-gray-400">Estado actual</p>
+            <strong [ngClass]="getStatusTextClass(selectedVehicle.status)">
+              {{ selectedVehicle.status }}
+            </strong>
+          </div>
+
+          <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-4">
+            <p class="text-sm text-gray-400">Latitud</p>
+            <strong>{{ selectedVehicle.last_lat }}</strong>
+          </div>
+
+          <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-4">
+            <p class="text-sm text-gray-400">Longitud</p>
+            <strong>{{ selectedVehicle.last_lng }}</strong>
+          </div>
+
+          <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-4">
+            <p class="text-sm text-gray-400">Última transmisión</p>
+            <strong>
+              {{ selectedVehicle.last_seen | date:'dd/MM/yyyy HH:mm:ss' }}
+            </strong>
+          </div>
+        </div>
+      </section>
+    }
 
     <footer class="mt-6 text-sm text-gray-400">
       Última actualización: {{ lastUpdate | date:'dd/MM/yyyy HH:mm:ss' }} · Actualizando cada 5 segundos

@@ -16,6 +16,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private pollingSubscription?: Subscription;
 
   vehicles: Vehicle[] = [];
+  selectedVehicle?: Vehicle;
   lastUpdate = new Date();
 
   ngOnInit(): void {
@@ -35,11 +36,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: (vehicles) => {
         this.vehicles = vehicles;
         this.lastUpdate = new Date();
+
+        if (this.selectedVehicle) {
+          this.selectedVehicle = vehicles.find(
+            (vehicle) => vehicle.vehicle_id === this.selectedVehicle?.vehicle_id
+          );
+        }
       },
       error: (error) => {
         console.error('Error cargando vehículos', error);
       },
     });
+  }
+
+  selectVehicle(vehicle: Vehicle): void {
+    this.selectedVehicle = vehicle;
+  }
+
+  closeSelectedVehicle(): void {
+    this.selectedVehicle = undefined;
   }
 
   get totalVehicles(): number {
