@@ -1,1 +1,21 @@
-/* You can add global styles to this file, and also import other style files */
+@use "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  --simon-primary: #10e6c3;
+  --simon-bg: #05070a;
+  --simon-card: #111827;
+  --simon-border: #1f2937;
+  --simon-text: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--simon-bg);
+  color: var(--simon-text);
+  font-family: Inter, Arial, sans-serif;
+}
