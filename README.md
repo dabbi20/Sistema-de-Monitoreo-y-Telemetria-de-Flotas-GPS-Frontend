@@ -419,7 +419,7 @@ Esta experiencia reforzó la importancia de utilizar la IA como herramienta de a
 
 Enlace:
 
-PENDIENTE
+https://youtu.be/HmQwG2waTMU
 
 ---
 
