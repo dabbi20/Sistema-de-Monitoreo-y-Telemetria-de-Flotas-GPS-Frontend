@@ -3,6 +3,7 @@ import { AfterViewInit, Component, OnDestroy, OnInit, inject } from '@angular/co
 import { interval, Subscription } from 'rxjs';
 import * as L from 'leaflet';
 import { Vehicle } from '../../models/vehicle.model';
+import { TelemetryEvent } from '../../models/telemetry-event.model';
 import { VehicleService } from '../../core/services/vehicle.service';
 
 @Component({
@@ -21,14 +22,17 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private vehicleMarkers = new Map<string, L.CircleMarker>();
 
   vehicles: Vehicle[] = [];
+  events: TelemetryEvent[] = [];
   selectedVehicle?: Vehicle;
   lastUpdate = new Date();
 
   ngOnInit(): void {
     this.loadVehicles();
+    this.loadEvents();
 
     this.pollingSubscription = interval(5000).subscribe(() => {
       this.loadVehicles();
+      this.loadEvents();
     });
   }
 
@@ -39,6 +43,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.pollingSubscription?.unsubscribe();
     this.map?.remove();
+  }
+
+  scrollToSection(sectionId: string): void {
+    document.getElementById(sectionId)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
   }
 
   loadVehicles(): void {
@@ -58,6 +69,23 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error cargando vehículos', error);
+      },
+    });
+  }
+
+  loadEvents(): void {
+    this.vehicleService.getEvents().subscribe({
+      next: (events) => {
+        this.events = events
+          .sort(
+            (a: any, b: any) =>
+              new Date(b.event_time).getTime() -
+              new Date(a.event_time).getTime()
+          )
+          .slice(0, 20);
+      },
+      error: (error) => {
+        console.error('Error cargando eventos', error);
       },
     });
   }
@@ -113,8 +141,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       marker.bindPopup(this.buildPopupContent(vehicle));
 
       marker.on('click', () => {
-        this.selectedVehicle = vehicle;
-        this.updateMapMarkers();
+        this.selectVehicle(vehicle);
 
         setTimeout(() => {
           this.vehicleMarkers.get(vehicle.vehicle_id)?.openPopup();
@@ -154,35 +181,88 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 350);
   }
 
-private buildPopupContent(vehicle: Vehicle): string {
-  return `
-    <div style="
-      min-width:220px;
-      padding:4px;
-      font-family:Inter,sans-serif;
-    ">
-      <h3 style="
-        margin:0 0 8px 0;
-        font-size:16px;
-        font-weight:700;
-      ">
-        ${vehicle.vehicle_id}
-      </h3>
+  private buildPopupContent(vehicle: Vehicle): string {
+    return `
+      <div style="min-width:220px;padding:4px;font-family:Inter,sans-serif;">
+        <h3 style="margin:0 0 8px 0;font-size:16px;font-weight:700;">
+          ${vehicle.vehicle_id}
+        </h3>
 
-      <div style="margin-bottom:8px;">
-        ${this.getStatusIcon(vehicle.status)}
-        <strong>${this.formatStatus(vehicle.status)}</strong>
+        <div style="margin-bottom:8px;">
+          ${this.getStatusIcon(vehicle.status)}
+          <strong>${this.formatStatus(vehicle.status)}</strong>
+        </div>
+
+        <div>📍 Lat: ${vehicle.last_lat}</div>
+        <div>📍 Lng: ${vehicle.last_lng}</div>
+
+        <div style="margin-top:8px;color:#666;">
+          🕒 ${this.getRelativeTime(vehicle.last_seen)}
+        </div>
       </div>
+    `;
+  }
 
-      <div>📍 ${vehicle.last_lat}</div>
-      <div>📍 ${vehicle.last_lng}</div>
+  getEventIcon(type: string): string {
+    if (type === 'VEHICLE_CREATED') return '🚚';
+    if (type === 'STATUS_CHANGED') return '🔄';
+    if (type === 'VEHICLE_DELETED') return '🗑️';
+    return '📍';
+  }
 
-      <div style="margin-top:8px;color:#666;">
-        🕒 ${this.getRelativeTime(vehicle.last_seen)}
-      </div>
-    </div>
-  `;
-}
+  formatEventType(eventType: string): string {
+    if (eventType === 'VEHICLE_CREATED') return 'Vehículo creado';
+    if (eventType === 'STATUS_CHANGED') return 'Cambio de estado';
+    if (eventType === 'VEHICLE_DELETED') return 'Vehículo eliminado';
+    return eventType;
+  }
+
+  formatEventDescription(event: TelemetryEvent): string {
+    if (event.description) {
+      return this.formatEventText(event.description);
+    }
+
+    if (event.event_type === 'VEHICLE_CREATED') {
+      return `${event.vehicle_id} fue creado con estado ${this.formatNullableStatus(event.new_status)}`;
+    }
+
+    if (event.event_type === 'STATUS_CHANGED') {
+      return `${event.vehicle_id} cambió de ${this.formatNullableStatus(event.previous_status)} a ${this.formatNullableStatus(event.new_status)}`;
+    }
+
+    if (event.event_type === 'VEHICLE_DELETED') {
+      return `${event.vehicle_id} fue eliminado desde ${this.formatNullableStatus(event.previous_status)}`;
+    }
+
+    return `${event.vehicle_id} registró ${event.event_type}`;
+  }
+
+  private formatEventText(description: string): string {
+    return description
+      .replaceAll('EN_MOVIMIENTO', 'En movimiento')
+      .replaceAll('DETENIDO', 'Detenido')
+      .replaceAll('SIN_SENAL', 'Sin señal')
+      .replaceAll('STATUS_CHANGED', 'Cambio de estado')
+      .replaceAll('VEHICLE_CREATED', 'Vehículo creado')
+      .replaceAll('VEHICLE_DELETED', 'Vehículo eliminado');
+  }
+
+  formatNullableStatus(status?: string | null): string {
+    if (!status) return 'N/A';
+    return this.formatStatus(status);
+  }
+
+  getEventTime(event: any): string {
+    return event.event_time || '';
+  }
+
+  getEventRelativeTime(event: any): string {
+    const eventTime = this.getEventTime(event);
+
+    if (!eventTime) return 'Fecha no disponible';
+
+    return this.getRelativeTime(eventTime);
+  }
 
   private getMarkerColor(status: string): string {
     if (status === 'EN_MOVIMIENTO') return '#10E6C3';
@@ -199,8 +279,14 @@ private buildPopupContent(vehicle: Vehicle): string {
   }
 
   getRelativeTime(dateValue: string): string {
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+      return 'Fecha no disponible';
+    }
+
     const seconds = Math.floor(
-      (new Date().getTime() - new Date(dateValue).getTime()) / 1000
+      (new Date().getTime() - date.getTime()) / 1000
     );
 
     if (seconds < 5) return 'Ahora';

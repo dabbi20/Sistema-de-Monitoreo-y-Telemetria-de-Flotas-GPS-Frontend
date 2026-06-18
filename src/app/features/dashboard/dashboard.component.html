@@ -9,22 +9,19 @@
     </div>
 
     <nav class="space-y-3">
-      <button class="nav-item active">Dashboard</button>
-      <button class="nav-item">Vehículos</button>
-      <button class="nav-item">Mapa</button>
-      <button class="nav-item">Eventos</button>
-      <button class="nav-item">Métricas</button>
-      <button class="nav-item">Historial</button>
+      <button class="nav-item active" (click)="scrollToSection('dashboard')">Dashboard</button>
+      <button class="nav-item" (click)="scrollToSection('vehicles')">Vehículos</button>
+      <button class="nav-item" (click)="scrollToSection('map')">Mapa</button>
+      <button class="nav-item" (click)="scrollToSection('events')">Eventos</button>
+      <button class="nav-item" (click)="scrollToSection('metrics')">Métricas</button>
     </nav>
   </aside>
 
-  <main class="ml-64 min-h-screen p-8">
+  <main id="dashboard" class="ml-64 min-h-screen scroll-smooth p-8">
     <header class="mb-8 flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold">Dashboard</h1>
-        <p class="text-sm text-gray-400">
-          Monitoreo en tiempo real de flotas GPS
-        </p>
+        <p class="text-sm text-gray-400">Monitoreo en tiempo real de flotas GPS</p>
       </div>
 
       <div class="rounded-full border border-[#1F2937] bg-[#071015] px-4 py-2 text-sm text-[#10E6C3] shadow-lg shadow-[#10E6C3]/5">
@@ -32,7 +29,7 @@
       </div>
     </header>
 
-    <section class="grid grid-cols-1 gap-5 md:grid-cols-4">
+    <section id="metrics" class="grid grid-cols-1 gap-5 md:grid-cols-4">
       <article class="metric-card">
         <p>Total Vehículos</p>
         <h2>{{ totalVehicles }}</h2>
@@ -58,14 +55,12 @@
       </article>
     </section>
 
-    <section class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[3.2fr_1fr]">
+    <section id="map" class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[3.2fr_1fr]">
       <div class="panel h-[560px]">
         <div class="mb-4 flex items-center justify-between">
           <div>
             <h2 class="text-lg font-semibold">Mapa de vehículos</h2>
-            <p class="text-xs text-gray-500">
-              Última ubicación recibida por cada vehículo
-            </p>
+            <p class="text-xs text-gray-500">Última ubicación recibida por cada vehículo</p>
           </div>
 
           <div class="hidden gap-3 text-xs text-gray-400 2xl:flex">
@@ -97,48 +92,38 @@
           </span>
         </div>
 
-       <div class="max-h-[475px] space-y-3 overflow-y-auto pr-2">
-  @for (vehicle of vehicles; track vehicle.vehicle_id) {
-    <button
-      type="button"
-      class="vehicle-row w-full border border-transparent text-left transition hover:bg-white/5"
-      [class.border-[#10E6C3]]="
-        selectedVehicle?.vehicle_id === vehicle.vehicle_id
-      "
-      [class.bg-[#10E6C3]/10]="
-        selectedVehicle?.vehicle_id === vehicle.vehicle_id
-      "
-      (click)="selectVehicle(vehicle)"
-    >
-      <span
-        class="dot"
-        [ngClass]="getDotClass(vehicle.status)"
-      ></span>
+        <div class="max-h-[475px] space-y-3 overflow-y-auto pr-2">
+          @for (vehicle of vehicles; track vehicle.vehicle_id) {
+            <button
+              type="button"
+              class="vehicle-row w-full border border-transparent text-left transition hover:bg-white/5"
+              [class.border-[#10E6C3]]="selectedVehicle?.vehicle_id === vehicle.vehicle_id"
+              [class.bg-[#10E6C3]/10]="selectedVehicle?.vehicle_id === vehicle.vehicle_id"
+              (click)="selectVehicle(vehicle)"
+            >
+              <span class="dot" [ngClass]="getDotClass(vehicle.status)"></span>
 
-      <div>
-        <strong>{{ vehicle.vehicle_id }}</strong>
+              <div>
+                <strong>{{ vehicle.vehicle_id }}</strong>
+                <p [ngClass]="getStatusTextClass(vehicle.status)">
+                  {{ formatStatus(vehicle.status) }}
+                </p>
+              </div>
 
-        <p [ngClass]="getStatusTextClass(vehicle.status)">
-          {{ formatStatus(vehicle.status) }}
-        </p>
-      </div>
-
-      <span class="ml-auto whitespace-nowrap text-xs text-gray-400">
-        {{ getRelativeTime(vehicle.last_seen) }}
-      </span>
-    </button>
-  }
-</div>
+              <span class="ml-auto whitespace-nowrap text-xs text-gray-400">
+                {{ getRelativeTime(vehicle.last_seen) }}
+              </span>
+            </button>
+          }
+        </div>
       </div>
     </section>
 
-    <section class="panel mt-6">
+    <section id="vehicles" class="panel mt-6">
       <div class="mb-4 flex items-center justify-between">
         <div>
           <h2 class="text-lg font-semibold">Listado de vehículos</h2>
-          <p class="text-xs text-gray-500">
-            Consulta general del estado actual de la flota
-          </p>
+          <p class="text-xs text-gray-500">Consulta general del estado actual de la flota</p>
         </div>
 
         <span class="rounded-full border border-[#1F2937] px-3 py-1 text-xs text-gray-400">
@@ -161,9 +146,7 @@
           <tbody>
             @for (vehicle of vehicles; track vehicle.vehicle_id) {
               <tr class="table-row">
-                <td class="p-4 font-medium text-white">
-                  {{ vehicle.vehicle_id }}
-                </td>
+                <td class="p-4 font-medium text-white">{{ vehicle.vehicle_id }}</td>
 
                 <td class="p-4">
                   <span class="badge" [ngClass]="getStatusClass(vehicle.status)">
@@ -180,13 +163,13 @@
                 </td>
 
                 <td class="p-4">
-              <button
-  class="action-btn flex items-center gap-2"
-  (click)="selectVehicle(vehicle)"
->
-  👁
-  <span>Ver detalle</span>
-</button>
+                  <button
+                    class="action-btn flex items-center gap-2"
+                    (click)="selectVehicle(vehicle)"
+                  >
+                    👁
+                    <span>Ver detalle</span>
+                  </button>
                 </td>
               </tr>
             }
@@ -202,9 +185,7 @@
             <h2 class="text-lg font-semibold">
               Detalle del vehículo {{ selectedVehicle.vehicle_id }}
             </h2>
-            <p class="text-xs text-gray-500">
-              Información actualizada desde el backend
-            </p>
+            <p class="text-xs text-gray-500">Información actualizada desde el backend</p>
           </div>
 
           <button
@@ -241,11 +222,49 @@
       </section>
     }
 
+    <section id="events" class="panel mt-6">
+      <div class="mb-4">
+        <h2 class="text-lg font-semibold">Historial de eventos</h2>
+        <p class="text-xs text-gray-500">Cambios de estado registrados por el backend</p>
+      </div>
+
+      <div class="max-h-[520px] space-y-3 overflow-y-auto pr-2">
+        @if (events.length === 0) {
+          <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-4 text-sm text-gray-400">
+            No hay eventos registrados.
+          </div>
+        }
+
+        @for (event of events; track $index) {
+          <div class="rounded-xl border border-[#1F2937] bg-[#0B1220] p-4">
+            <div class="flex items-center justify-between">
+              <strong class="text-[#10E6C3]">
+                {{ getEventIcon(event.event_type) }}
+                {{ event.vehicle_id }}
+              </strong>
+
+              <span class="text-xs text-gray-400">
+                {{ getEventRelativeTime(event) }}
+              </span>
+            </div>
+
+            <div class="mt-2 text-sm text-white">
+              {{ formatEventDescription(event) }}
+            </div>
+
+            <div class="mt-2 text-xs text-gray-500">
+              {{ formatEventType(event.event_type) }}
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
     <footer class="mt-6 flex items-center gap-2 text-sm text-gray-400">
       <span class="h-2 w-2 rounded-full bg-[#10E6C3]"></span>
       <span>
         Última actualización:
-        {{ lastUpdate | date:'dd/MM/yyyy HH:mm:ss' }}
+        {{ getRelativeTime(lastUpdate.toISOString()) }}
         · Actualizando cada 5 segundos
       </span>
     </footer>
